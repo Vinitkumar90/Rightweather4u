@@ -1,31 +1,53 @@
 import { useState } from 'react';
-import { ActivityIndicator, Button, StyleSheet, Text, TextInput, View,Image,Keyboard } from 'react-native';
+import { ActivityIndicator, Button, StyleSheet, Text, TextInput, View,Image,Keyboard, FlatList } from 'react-native';
 import axios from 'axios';
 
-const API_KEY = '6c80ed50512457062d58f2804bea228b'
+const API_KEY = 'api chor do bhaii '
 
 export default function App() {
   const[city, setCity] = useState('');
   const[weather, setweather] = useState(null);
   const[loading, setLoading] = useState(false);
-  const[error, setError] = useState('')
+  const[error, setError] = useState('');
+  const[forecast, setForecast] = useState([])
 
   const fetchWeather  = () => {
-    if(!city) return;
+    if(!city.trim()){
+      setError("please enter a valid city name")
+      return;
+    } 
     Keyboard.dismiss()
     setLoading(true)
     setError('');
+    setweather(null);
+    setForecast([]);
+
     axios.get(
       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
     )
     .then((res)=>{
       setweather(res.data);
-      setLoading(false);
+
+
+      return axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`)
+    })
+    .then((res)=>{
+      const dailyData = {};
+      res.data.list.forEach((item)=>{
+          const date = item.dt_txt.split(' ')[0];
+          if(!dailyData[date] && item.dt_txt.includes("12:00:00")){
+            dailyData[date] = item;
+          }
+      });
+
+      setForecast(Object.values(dailyData))
     })
     .catch((err)=>{
       setError('City not found');
-      setweather(null);
-      setLoading(false);
+    })
+    .finally(()=>{
+      setLoading(false)
+      setCity('')
     })
   }
 
@@ -62,6 +84,24 @@ export default function App() {
 
       </View>
      )}
+     <View style={{height:150}}>
+      <FlatList
+        horizontal
+        data={forecast}
+        keyExtractor={(item,index)=> index.toString()}
+        renderItem={({item}) => (
+          <View style={styles.forecastItem}>
+            <Text style={styles.date}>{item.dt_txt.split(" ")[0]}</Text>
+            <Image
+              source={{uri : `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}}
+              style={{width:50, height:50}}
+            />
+           <Text>{item.main.temp}°C</Text>
+           <Text>{item.weather[0].description}</Text>
+          </View>
+        )}
+      />
+      </View>
      
     </View>
   );
@@ -95,7 +135,7 @@ const styles = StyleSheet.create({
   },
   weatherbox:{
     alignItems:'center',
-    marginVertical:12,
+    marginVertical:18,
     borderWidth:2,
     padding:24,
   },
@@ -107,5 +147,18 @@ const styles = StyleSheet.create({
   },
   desc:{
     fontSize:28,
+  },
+  forecastItem:{
+    marginHorizontal:10,
+    borderWidth:1,
+    alignItems:'center',
+    backgroundColor:'#e3e3e3',
+    padding:10,
+    borderRadius:10
+  },
+  date:{
+    fontSize:14,
+    fontWeight:'bold',
+    marginBottom: 5,
   }
 });
