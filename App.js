@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Button, StyleSheet, Text, TextInput, View,Image } from 'react-native';
+import { ActivityIndicator, Button, StyleSheet, Text, TextInput, View,Image,Keyboard } from 'react-native';
 import axios from 'axios';
 
-const API_KEY = 'Your Dummy key'
+const API_KEY = '6c80ed50512457062d58f2804bea228b'
 
 export default function App() {
   const[city, setCity] = useState('');
@@ -12,6 +12,7 @@ export default function App() {
 
   const fetchWeather  = () => {
     if(!city) return;
+    Keyboard.dismiss()
     setLoading(true)
     setError('');
     axios.get(
@@ -31,9 +32,10 @@ export default function App() {
 
   return (
     <View  style={styles.container}>
-     <Text>RightWeather4U</Text>
+     <Text style={styles.heading}>RightWeather4U</Text>
 
      <TextInput
+     style={styles.input}
      placeholder='Enter city'
       value={city}
       onChangeText={(text)=>setCity(text)}
@@ -46,10 +48,10 @@ export default function App() {
      {error ? <Text>{error}</Text> : null}
 
      {weather && (
-      <View>
-        <Text>{weather.name}</Text>
-        <Text>{weather.main.temp}°C</Text>
-        <Text>{weather.weather[0].description}</Text>
+      <View style={styles.weatherbox}>
+        <Text style={styles.city}>{weather.name}</Text>
+        <Text style={styles.temp}>{weather.main.temp}°C</Text>
+        <Text style={styles.desc}>{weather.weather[0].description}</Text>
         <Image
           source={{
             uri: `https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`
@@ -67,11 +69,43 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
-    // backgroundColor: '#fff',
-    // alignItems: 'center',
-    // justifyContent: 'center',
-    padding:24,
-    marginTop: 40,
+   flex:1,
+   alignItems:'center',
+   justifyContent:"center",
+    padding:20,
+    marginTop: 50,
   },
+  heading:{
+    textAlign:"center",
+    fontSize:24,
+    backgroundColor:"pink",
+    fontWeight:'bold',
+    marginBottom:16,
+    paddingHorizontal:32,
+    paddingVertical:16,
+    borderRadius:12
+  },
+  input: {
+    borderColor: '#999',
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 6,
+    width:'80%'
+  },
+  weatherbox:{
+    alignItems:'center',
+    marginVertical:12,
+    borderWidth:2,
+    padding:24,
+  },
+  city:{
+    fontSize:24,
+  },
+  temp:{
+    fontSize:26,
+  },
+  desc:{
+    fontSize:28,
+  }
 });
